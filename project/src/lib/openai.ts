@@ -6,62 +6,41 @@ const openai = new OpenAI({
 
 export async function generateWorkout(params: {
   goal: string
-  experience: string
+  level: string
   equipment: string[]
   daysPerWeek: number
 }) {
-  const response = await openai.chat.completions.create({
+  const prompt = `Create a ${params.daysPerWeek}-day workout plan for a ${params.level} level person with goal: ${params.goal}. Available equipment: ${params.equipment.join(', ')}. Return as JSON with exercises, sets, reps, and rest periods.`
+  
+  const completion = await openai.chat.completions.create({
     model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a fitness expert. Generate structured workout plans in JSON format.',
-      },
-      {
-        role: 'user',
-        content: `Create a ${params.daysPerWeek}-day workout plan for ${params.goal} with ${params.experience} experience level using: ${params.equipment.join(', ')}.`,
-      },
-    ],
-    temperature: 0.7,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 1000,
   })
-
-  return response.choices[0]?.message?.content
+  
+  return completion.choices[0]?.message?.content || ''
 }
 
 export async function analyzeProgress(workoutHistory: any[]) {
-  const response = await openai.chat.completions.create({
+  const prompt = `Analyze this workout history and provide insights on progress, plateaus, and recommendations: ${JSON.stringify(workoutHistory)}`
+  
+  const completion = await openai.chat.completions.create({
     model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a fitness coach. Analyze workout data and provide insights.',
-      },
-      {
-        role: 'user',
-        content: `Analyze this workout history and provide insights: ${JSON.stringify(workoutHistory)}`,
-      },
-    ],
-    temperature: 0.5,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 500,
   })
-
-  return response.choices[0]?.message?.content
+  
+  return completion.choices[0]?.message?.content || ''
 }
 
 export async function suggestImprovements(exercise: string, currentForm: string) {
-  const response = await openai.chat.completions.create({
+  const prompt = `Provide form tips and safety advice for ${exercise}. Current approach: ${currentForm}`
+  
+  const completion = await openai.chat.completions.create({
     model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a fitness trainer. Provide form tips and safety advice.',
-      },
-      {
-        role: 'user',
-        content: `Provide form tips for ${exercise}. Current approach: ${currentForm}`,
-      },
-    ],
-    temperature: 0.3,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 300,
   })
-
-  return response.choices[0]?.message?.content
+  
+  return completion.choices[0]?.message?.content || ''
 }
